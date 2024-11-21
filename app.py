@@ -16,7 +16,7 @@ def aiPost():
     query = json_content.get("query")
     print(f"query: {query}")
 
-    response_answer = "Sample response"
+    response_answer = "Sample response. query: " + query
     return response_answer
 
 def start_app():
