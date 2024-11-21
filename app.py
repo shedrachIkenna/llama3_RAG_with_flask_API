@@ -1,7 +1,17 @@
+from flask import Flask 
 from langchain_community.llms import Ollama 
 
-llm = Ollama(model='llama3')
+app = Flask(__name__)
 
-response = llm.invoke("Tell me a soccer joke")
+#llm = Ollama(model='llama3')
 
-print(response)
+#response = llm.invoke("Tell me a soccer joke")
+
+#print(response)
+
+def start_app():
+    app.run(host="0.0.0.0", port=8080, debug=True)
+
+
+if __name__ == "__main__":
+    start_app()
