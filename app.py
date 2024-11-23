@@ -4,6 +4,9 @@ from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.document_loaders import PDFPlumberLoader
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
+from langchain.prompts import PromptTemplate
 
 
 app = Flask(__name__)
@@ -17,6 +20,14 @@ embedding = FastEmbedEmbeddings()
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1024, chunk_overlap=80, length_function=len, is_separator_regex=False
 )
+
+raw_prompt = PromptTemplate.from_template(""" 
+    <s>[INST] You are a technical assistant good at searching docuemnts. If you do not have an answer from the provided information say so. [/INST] </s>
+    [INST] {input}
+           Context: {context}
+           Answer:
+    [/INST]
+""")
 
 
 
@@ -32,6 +43,40 @@ def aiPost():
 
     response_answer = {"answer": response}
     return response_answer
+
+
+@app.route("/ask_pdf", methods=["POST"])
+def askPDFPost():
+    print("Post /ask_pdf called")
+    json_content = request.json
+    query = json_content.get("query")
+
+
+    print(f"query: {query}")
+
+    print("Loading vector store")
+    vector_store = Chroma(persist_directory=folder_path, embedding_function=embedding)
+
+    print("Creating a chain")
+    retriever = vector_store.as_retriever(
+        search_type="similarity_score_threshold",
+        search_kwargs={
+            "k": 20,
+            "score_threshold": 0.1,
+        },
+    )
+
+    document_chain = create_stuff_documents_chain(cached_llm, raw_prompt)
+    chain = create_retrieval_chain(retriever, document_chain)
+
+    result = chain.invoke({"input": query})
+
+    print(result)
+
+    response_answer = {"answer": result["answer"]}
+    return response_answer
+
+
 
 @app.route("/pdf", methods=["POST"])
 def pdfPost():
