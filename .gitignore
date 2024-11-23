@@ -6,6 +6,9 @@
 .venv/
 venv/
 ENV/
+myenv/
+
+db/
 
 
 # OS generated files #
