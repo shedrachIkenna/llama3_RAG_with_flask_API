@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from langchain_ollama import OllamaLLM
-from langchain_community.vectorstores import Chroma 
+from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.document_loaders import PDFPlumberLoader
@@ -73,7 +73,14 @@ def askPDFPost():
 
     print(result)
 
-    response_answer = {"answer": result["answer"]}
+    sources = []
+
+    for doc in result["context"]:
+        sources.append(
+            {"source": doc.metadata["source"], "page_content": doc.page_content}
+        )
+
+    response_answer = {"answer": result["answer"], "sources": sources}
     return response_answer
 
 
